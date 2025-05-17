@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <!-- Head content remains the same -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Formulario de Vacunación</title>
   <style>
+    /* CSS remains the same */
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #f9f9f9;
@@ -269,8 +271,8 @@
   </div>
 
   <script>
-    // URL de la API (actualiza con tu URL real cuando despliegues en Cloud Run)
-    const API_URL = 'https://fedegan-backend-652251312413.us-central1.run.app';
+    // URL de la API - CORREGIDA para incluir /api como en el servicio API JS
+    const API_URL = 'https://fedegan-backend-652251312413.us-central1.run.app/api';
 
     function inicializarFormulario() {
       cargarNombreVacunador();
