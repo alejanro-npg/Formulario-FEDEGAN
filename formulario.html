@@ -24,12 +24,40 @@
     h2 {
       text-align: center;
       margin-bottom: 1.5rem;
+      color: #2c3e50;
+    }
+
+    .status-container {
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      display: none;
+      text-align: center;
+    }
+
+    .status-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .status-warning {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
     }
 
     label {
       display: block;
       margin-top: 1rem;
       font-weight: bold;
+      color: #2c3e50;
     }
 
     input, select, textarea {
@@ -39,6 +67,18 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       box-sizing: border-box;
+      font-size: 1rem;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+
+    input:disabled, input[readonly] {
+      background-color: #f8f9fa;
+      cursor: not-allowed;
     }
 
     .inline {
@@ -52,6 +92,16 @@
       width: auto;
     }
 
+    .row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .col {
+      flex: 1;
+    }
+
     button {
       margin-top: 2rem;
       padding: 1rem;
@@ -60,12 +110,19 @@
       background-color: #28a745;
       color: white;
       font-size: 1rem;
+      font-weight: bold;
       border-radius: 8px;
       cursor: pointer;
+      transition: background-color 0.3s;
     }
 
     button:hover {
       background-color: #218838;
+    }
+
+    button:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
     }
 
     .add-btn {
@@ -77,10 +134,27 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      transition: background-color 0.3s;
     }
 
     .add-btn:hover {
       background-color: #0056b3;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     @media (max-width: 768px) {
@@ -90,38 +164,61 @@
       input, select, textarea, button {
         font-size: 1rem;
       }
+      .row {
+        flex-direction: column;
+        gap: 0;
+      }
     }
   </style>
 </head>
-<body onload="cargarNombreVacunador()">
+<body onload="inicializarFormulario()">
   <div class="form-container">
-    <h2>Formulario Registro de Vacunadores</h2>
+    <h2>Formulario Registro de Vacunación</h2>
+    
+    <div id="statusMessage" class="status-container"></div>
     
     <label>Vacunador</label>
     <input type="text" id="vacunador" readonly>
 
-    <label>Nombre de la campaña</label>
-    <input type="text" id="campania">
-
-    <div class="inline">
-      <input type="checkbox" id="finalizada">
-      <label for="finalizada">¿Campaña finalizada?</label>
+    <div class="row">
+      <div class="col">
+        <label>Nombre de la campaña</label>
+        <input type="text" id="campania" placeholder="Ej: Campaña Nacional 2025 - Fase 1">
+      </div>
+      <div class="col">
+        <label>&nbsp;</label>
+        <div class="inline">
+          <input type="checkbox" id="finalizada">
+          <label for="finalizada">¿Campaña finalizada?</label>
+        </div>
+      </div>
     </div>
 
-    <label for="totalMachos">Total de machos:</label>
-    <input type="number" id="totalMachos" name="totalMachos" min="0" required>
-               
-    <label for="totalHembras">Total de hembras:</label>
-    <input type="number" id="totalHembras" name="totalHembras" min="0" required>
+    <div class="row">
+      <div class="col">
+        <label for="totalMachos">Total de machos:</label>
+        <input type="number" id="totalMachos" name="totalMachos" min="0" required placeholder="0">
+      </div>
+      <div class="col">
+        <label for="totalHembras">Total de hembras:</label>
+        <input type="number" id="totalHembras" name="totalHembras" min="0" required placeholder="0">
+      </div>
+      <div class="col">
+        <label for="totalAnimales">Total de animales:</label>
+        <input type="number" id="totalAnimales" name="totalAnimales" readonly>
+      </div>
+    </div>
 
-    <label for="totalAnimales">Total de animales:</label>
-    <input type="number" id="totalAnimales" name="totalAnimales" readonly>
-  
-    <label>Animales vacunados</label>
-    <input type="number" id="vacunados" min="0">
-
-    <label>Animales enfermos</label>
-    <input type="number" id="enfermos" min="0">
+    <div class="row">
+      <div class="col">
+        <label>Animales vacunados</label>
+        <input type="number" id="vacunados" min="0" placeholder="0">
+      </div>
+      <div class="col">
+        <label>Animales enfermos</label>
+        <input type="number" id="enfermos" min="0" placeholder="0">
+      </div>
+    </div>
 
     <label>Enfermedades detectadas</label>
     <div id="enfermedades">
@@ -138,34 +235,107 @@
     <label>Vacunas aplicadas</label>
     <div id="vacunas">
       <select name="vacuna">
-        <option>Vacuna Aftosa</option>
+        <option>Aftosa Bivalente</option>
         <option>Vacuna Brucela</option>
         <option>Vacuna Rabia</option>
         <option>Vacuna Carbunco</option>
-        <option>Vacuna Lepto</option>
+        <option>Triple Bovina</option>
       </select>
     </div>
     <button class="add-btn" type="button" onclick="agregarVacuna()">+ Agregar vacuna</button>
 
-    <label>Fecha y hora</label>
-    <input type="datetime-local" id="fechaHora">
+    <div class="row">
+      <div class="col">
+        <label>Fecha y hora</label>
+        <input type="datetime-local" id="fechaHora">
+      </div>
+    </div>
 
-    <label>Ubicación geográfica</label>
-    <input type="text" id="ubicacion">
-
-    <label>Nombre de la finca</label>
-    <input type="text" id="finca">
+    <div class="row">
+      <div class="col">
+        <label>Ubicación geográfica</label>
+        <input type="text" id="ubicacion" placeholder="Ej: Cundinamarca, Bogotá">
+      </div>
+      <div class="col">
+        <label>Nombre de la finca</label>
+        <input type="text" id="finca" placeholder="Ej: Hacienda El Paraíso">
+      </div>
+    </div>
 
     <label>Observaciones</label>
-    <textarea id="observaciones" rows="3"></textarea>
+    <textarea id="observaciones" rows="3" placeholder="Notas adicionales sobre la jornada de vacunación"></textarea>
 
-    <button onclick="guardarFormulario()">Guardar</button>
+    <button id="btnGuardar" onclick="guardarFormulario()">Guardar</button>
   </div>
 
   <script>
+    // URL de la API (actualiza con tu URL real cuando despliegues en Cloud Run)
+    const API_URL = 'https://fedegan-backend-652251312413.us-central1.run.app';
+
+    function inicializarFormulario() {
+      cargarNombreVacunador();
+      establecerFechaActual();
+      
+      // Comprobar conectividad con el backend
+      verificarConexion();
+
+      // Configurar listeners para eventos
+      document.getElementById("totalMachos").addEventListener("input", actualizarTotalAnimales);
+      document.getElementById("totalHembras").addEventListener("input", actualizarTotalAnimales);
+    }
+
     function cargarNombreVacunador() {
-      const usuario = JSON.parse(localStorage.getItem('usuarioActual')) || { nombre: "NaN" };
-      document.getElementById('vacunador').value = usuario.nombre || "NaN";
+      const usuario = JSON.parse(localStorage.getItem('usuarioActual')) || { nombre: "Usuario de prueba" };
+      document.getElementById('vacunador').value = usuario.nombre || "Usuario de prueba";
+    }
+
+    function establecerFechaActual() {
+      const ahora = new Date();
+      // Formato para datetime-local: YYYY-MM-DDThh:mm
+      const fechaFormateada = ahora.getFullYear() + "-" + 
+                             padZero(ahora.getMonth() + 1) + "-" + 
+                             padZero(ahora.getDate()) + "T" + 
+                             padZero(ahora.getHours()) + ":" + 
+                             padZero(ahora.getMinutes());
+      
+      document.getElementById('fechaHora').value = fechaFormateada;
+    }
+
+    function padZero(num) {
+      return num < 10 ? "0" + num : num;
+    }
+
+    function verificarConexion() {
+      mostrarEstado('Verificando conexión con el servidor...', 'warning');
+      
+      fetch(`${API_URL}/status`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('API no disponible');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Estado del servidor:', data);
+          mostrarEstado('Conectado al servidor correctamente', 'success', 3000);
+        })
+        .catch(error => {
+          console.error('Error de conexión:', error);
+          mostrarEstado('No se pudo conectar al servidor. Los datos se guardarán localmente y se sincronizarán cuando la conexión esté disponible.', 'error');
+        });
+    }
+
+    function mostrarEstado(mensaje, tipo, duracion = 0) {
+      const statusDiv = document.getElementById('statusMessage');
+      statusDiv.textContent = mensaje;
+      statusDiv.className = `status-container status-${tipo}`;
+      statusDiv.style.display = 'block';
+      
+      if (duracion > 0) {
+        setTimeout(() => {
+          statusDiv.style.display = 'none';
+        }, duracion);
+      }
     }
 
     function agregarEnfermedad() {
@@ -187,180 +357,312 @@
       const nuevo = document.createElement('select');
       nuevo.name = "vacuna";
       nuevo.innerHTML = `
-        <option>Vacuna Aftosa</option>
+        <option>Aftosa Bivalente</option>
         <option>Vacuna Brucela</option>
         <option>Vacuna Rabia</option>
         <option>Vacuna Carbunco</option>
-        <option>Vacuna Lepto</option>
+        <option>Triple Bovina</option>
       `;
       contenedor.appendChild(nuevo);
     }
 
-    document.getElementById("totalMachos").addEventListener("input", actualizarTotalAnimales);
-    document.getElementById("totalHembras").addEventListener("input", actualizarTotalAnimales);
-
     function actualizarTotalAnimales() {
-        const machos = parseInt(document.getElementById("totalMachos").value) || 0;
-        const hembras = parseInt(document.getElementById("totalHembras").value) || 0;
-        document.getElementById("totalAnimales").value = machos + hembras;
+      const machos = parseInt(document.getElementById("totalMachos").value) || 0;
+      const hembras = parseInt(document.getElementById("totalHembras").value) || 0;
+      document.getElementById("totalAnimales").value = machos + hembras;
     }
-
 
     function guardarFormulario() {
-  // Validar datos antes de enviar
-  if (!document.getElementById('campania').value) {
-    alert("Por favor ingrese el nombre de la campaña");
-    return;
-  }
+      // Validar datos antes de enviar
+      if (!document.getElementById('campania').value) {
+        alert("Por favor ingrese el nombre de la campaña");
+        return;
+      }
 
-  if (!document.getElementById('fechaHora').value) {
-    alert("Por favor ingrese la fecha y hora");
-    return;
-  }
+      if (!document.getElementById('fechaHora').value) {
+        alert("Por favor ingrese la fecha y hora");
+        return;
+      }
 
-  if (!document.getElementById('ubicacion').value) {
-    alert("Por favor ingrese la ubicación");
-    return;
-  }
+      if (!document.getElementById('ubicacion').value) {
+        alert("Por favor ingrese la ubicación");
+        return;
+      }
 
-  if (!document.getElementById('finca').value) {
-    alert("Por favor ingrese el nombre de la finca");
-    return;
-  }
+      if (!document.getElementById('finca').value) {
+        alert("Por favor ingrese el nombre de la finca");
+        return;
+      }
+      
+      // Validar que haya animales
+      const totalMachos = parseInt(document.getElementById('totalMachos').value) || 0;
+      const totalHembras = parseInt(document.getElementById('totalHembras').value) || 0;
+      const totalAnimales = totalMachos + totalHembras;
+      
+      if (totalAnimales <= 0) {
+        alert("Debe haber al menos un animal");
+        return;
+      }
+      
+      // Validar vacunados
+      const vacunados = parseInt(document.getElementById('vacunados').value) || 0;
+      if (vacunados <= 0) {
+        alert("Debe ingresar la cantidad de animales vacunados");
+        return;
+      }
+      
+      if (vacunados > totalAnimales) {
+        alert("La cantidad de animales vacunados no puede ser mayor que el total de animales");
+        return;
+      }
 
-  // Preparar los datos en el formato que espera la API
-  const totalMachos = parseInt(document.getElementById('totalMachos').value) || 0;
-  const totalHembras = parseInt(document.getElementById('totalHembras').value) || 0;
-  
-  const data = {
-    vaccinatorName: document.getElementById('vacunador').value,
-    campaign: document.getElementById('campania').value,
-    campaignStatus: document.getElementById('finalizada').checked ? 'Finalizada' : 'En progreso',
-    animalsVaccinated: parseInt(document.getElementById('vacunados').value) || 0,
-    sickAnimals: parseInt(document.getElementById('enfermos').value) || 0,
-    maleCount: totalMachos,
-    femaleCount: totalHembras,
-    totalAnimals: totalMachos + totalHembras,
-    diseases: Array.from(document.getElementsByName('enfermedad')).map(e => e.value),
-    vaccineType: Array.from(document.getElementsByName('vacuna')).map(e => e.value).join(', '),
-    dateCreated: document.getElementById('fechaHora').value,
-    coordinates: [0, 0], // Estos valores deberían obtenerse del mapa o geocodificación
-    region: getRegionFromLocation(document.getElementById('ubicacion').value),
-    municipality: getMunicipalityFromLocation(document.getElementById('ubicacion').value),
-    farm: document.getElementById('finca').value,
-    observations: document.getElementById('observaciones').value,
-    // Campos adicionales para coincidir con la estructura de datos de React
-    vaccinatorId: getCurrentUserId(),
-    youngCount: Math.floor(totalMachos * 0.3) + Math.floor(totalHembras * 0.3), // Estimación
-    adultCount: Math.ceil(totalMachos * 0.7) + Math.ceil(totalHembras * 0.7)    // Estimación
-  };
+      // Obtener coordenadas (idealmente desde un mapa o GPS)
+      let coordenadas = [0, 0];
+      
+      // Intentar obtener ubicación actual si el navegador lo soporta
+      if (navigator.geolocation) {
+        try {
+          mostrarEstado('Obteniendo ubicación actual...', 'warning');
+          navigator.geolocation.getCurrentPosition(position => {
+            coordenadas = [position.coords.latitude, position.coords.longitude];
+            continuarEnvio(coordenadas);
+          }, error => {
+            console.warn('Error al obtener ubicación:', error);
+            mostrarEstado('No se pudo obtener la ubicación exacta. Usando ubicación aproximada.', 'warning', 3000);
+            continuarEnvio(getCoordenadas(document.getElementById('ubicacion').value));
+          });
+        } catch (e) {
+          console.warn('Error al acceder a geolocalización:', e);
+          mostrarEstado('No se pudo acceder a la geolocalización. Usando ubicación aproximada.', 'warning', 3000);
+          continuarEnvio(getCoordenadas(document.getElementById('ubicacion').value));
+        }
+      } else {
+        console.warn('Geolocalización no soportada');
+        mostrarEstado('Su navegador no soporta geolocalización. Usando ubicación aproximada.', 'warning', 3000);
+        continuarEnvio(getCoordenadas(document.getElementById('ubicacion').value));
+      }
+      
+      function continuarEnvio(coordenadas) {
+        // Preparar los datos en el formato que espera la API
+        const data = {
+          vaccinatorName: document.getElementById('vacunador').value,
+          campaign: document.getElementById('campania').value,
+          campaignStatus: document.getElementById('finalizada').checked ? 'Finalizada' : 'En Curso',
+          animalsVaccinated: vacunados,
+          sickAnimals: parseInt(document.getElementById('enfermos').value) || 0,
+          maleCount: totalMachos,
+          femaleCount: totalHembras,
+          totalAnimals: totalAnimales,
+          diseases: Array.from(document.getElementsByName('enfermedad')).map(e => e.value),
+          vaccineType: Array.from(document.getElementsByName('vacuna')).map(e => e.value)[0] || 'Aftosa Bivalente',
+          dateCreated: document.getElementById('fechaHora').value,
+          coordinates: coordenadas,
+          region: getRegionFromLocation(document.getElementById('ubicacion').value),
+          municipality: getMunicipalityFromLocation(document.getElementById('ubicacion').value),
+          farm: document.getElementById('finca').value,
+          observations: document.getElementById('observaciones').value,
+          // Campos adicionales para coincidir con la estructura de datos
+          vaccinatorId: getCurrentUserId(),
+          youngCount: Math.floor(totalMachos * 0.3) + Math.floor(totalHembras * 0.3), // Estimación
+          adultCount: Math.ceil(totalMachos * 0.7) + Math.ceil(totalHembras * 0.7)    // Estimación
+        };
 
-  // Guardar también en localStorage como respaldo
-  let registros = JSON.parse(localStorage.getItem('registrosVacunacion')) || [];
-  registros.push(data);
-  localStorage.setItem('registrosVacunacion', JSON.stringify(registros));
+        // Guardar en localStorage como respaldo
+        let registros = JSON.parse(localStorage.getItem('registrosVacunacion')) || [];
+        const registroLocal = {...data, timestamp: new Date().toISOString(), sincronizado: false};
+        registros.push(registroLocal);
+        localStorage.setItem('registrosVacunacion', JSON.stringify(registros));
 
-  // Enviar datos a la API
-  enviarDatosAPI(data);
-}
-
-// Función para enviar los datos a la API
-function enviarDatosAPI(data) {
-  // Muestra un indicador de carga
-  const btnGuardar = document.querySelector('button[onclick="guardarFormulario()"]');
-  const textoOriginal = btnGuardar.textContent;
-  btnGuardar.textContent = "Enviando...";
-  btnGuardar.disabled = true;
-
-  // URL de la API de la aplicación React
-  const apiUrl = 'http://santiagosantafe.me/proyectoFedegan/api/vaccinations';
-  
-  fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      // Si la API requiere autenticación, añade aquí el token
-      // 'Authorization': 'Bearer ' + localStorage.getItem('token')
-    },
-    body: JSON.stringify(data)
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Error en la respuesta del servidor');
+        // Enviar datos a la API
+        enviarDatosAPI(data);
+      }
     }
-    return response.json();
-  })
-  .then(responseData => {
-    console.log('Respuesta del servidor:', responseData);
-    alert("Formulario enviado correctamente a la aplicación.");
-    limpiarFormulario();
-  })
-  .catch(error => {
-    console.error('Error al enviar datos:', error);
-    alert("No se pudo enviar el formulario a la aplicación. Los datos se han guardado localmente.");
-  })
-  .finally(() => {
-    // Restaurar el botón
-    btnGuardar.textContent = textoOriginal;
-    btnGuardar.disabled = false;
-  });
-}
 
-// Función auxiliar para extraer la región de la ubicación
-function getRegionFromLocation(location) {
-  // Aquí podrías implementar lógica más compleja para extraer la región
-  // Por ahora, simplemente dividimos por coma y tomamos la primera parte
-  const parts = location.split(',');
-  return parts.length > 0 ? parts[0].trim() : location;
-}
+    // Función para enviar los datos a la API
+    function enviarDatosAPI(data) {
+      // Muestra un indicador de carga
+      const btnGuardar = document.getElementById('btnGuardar');
+      const textoOriginal = btnGuardar.textContent;
+      btnGuardar.innerHTML = '<span class="loading"></span> Enviando...';
+      btnGuardar.disabled = true;
+      
+      // Mostrar estado
+      mostrarEstado('Enviando datos al servidor...', 'warning');
 
-// Función auxiliar para extraer el municipio de la ubicación
-function getMunicipalityFromLocation(location) {
-  // Dividimos por coma y tomamos la segunda parte si existe
-  const parts = location.split(',');
-  return parts.length > 1 ? parts[1].trim() : '';
-}
+      // Adaptar datos al formato que espera el backend
+      const datosAdaptados = {
+        vaccinatorId: data.vaccinatorId,
+        vaccinatorName: data.vaccinatorName,
+        farm: data.farm,
+        municipality: data.municipality,
+        region: data.region,
+        campaign: data.campaign,
+        campaignStatus: data.campaignStatus,
+        vaccineType: data.vaccineType,
+        animalsVaccinated: data.animalsVaccinated,
+        maleCount: data.maleCount,
+        femaleCount: data.femaleCount,
+        youngCount: data.youngCount,
+        adultCount: data.adultCount,
+        observations: data.observations,
+        dateCreated: new Date(data.dateCreated).toISOString(),
+        // Convertir las coordenadas al formato que espera la base de datos
+        coordinates: {
+          lat: parseFloat(data.coordinates[0]) || 4.57, 
+          lng: parseFloat(data.coordinates[1]) || -74.30
+        }
+      };
+      
+      console.log('Enviando datos al servidor:', datosAdaptados);
+      
+      fetch(`${API_URL}/vaccinations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(datosAdaptados)
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('La API no está disponible. Verifica la URL.');
+          } else if (response.status === 400) {
+            throw new Error('Datos incorrectos. Verifica el formato.');
+          } else {
+            throw new Error(`Error en la respuesta del servidor: ${response.status}`);
+          }
+        }
+        return response.json();
+      })
+      .then(responseData => {
+        console.log('Respuesta del servidor:', responseData);
+        mostrarEstado('¡Formulario enviado correctamente! Los datos se han guardado en la base de datos.', 'success');
+        
+        // Actualizar estado en localStorage
+        let registros = JSON.parse(localStorage.getItem('registrosVacunacion')) || [];
+        const ultimoRegistro = registros[registros.length - 1];
+        ultimoRegistro.sincronizado = true;
+        localStorage.setItem('registrosVacunacion', JSON.stringify(registros));
+        
+        limpiarFormulario();
+      })
+      .catch(error => {
+        console.error('Error al enviar datos:', error);
+        mostrarEstado(`No se pudo enviar el formulario al servidor. Error: ${error.message}. Los datos se han guardado localmente y se intentarán sincronizar más tarde.`, 'error');
+      })
+      .finally(() => {
+        // Restaurar el botón
+        btnGuardar.innerHTML = textoOriginal;
+        btnGuardar.disabled = false;
+      });
+    }
 
-// Función para obtener el ID del usuario actual
-function getCurrentUserId() {
-  const usuario = JSON.parse(localStorage.getItem('usuarioActual')) || {};
-  return usuario.id || 'user_' + Math.floor(Math.random() * 1000);
-}
+    // Función auxiliar para extraer la región de la ubicación
+    function getRegionFromLocation(location) {
+      // Dividimos por coma y tomamos la primera parte
+      const parts = location.split(',');
+      return parts.length > 0 ? parts[0].trim() : location;
+    }
+
+    // Función auxiliar para extraer el municipio de la ubicación
+    function getMunicipalityFromLocation(location) {
+      // Dividimos por coma y tomamos la segunda parte si existe
+      const parts = location.split(',');
+      return parts.length > 1 ? parts[1].trim() : '';
+    }
+
+    // Función para obtener el ID del usuario actual
+    function getCurrentUserId() {
+      const usuario = JSON.parse(localStorage.getItem('usuarioActual')) || {};
+      return usuario.id || 'user_' + Math.floor(Math.random() * 1000);
+    }
+
+    // Función auxiliar para obtener coordenadas a partir de un texto de ubicación
+    function getCoordenadas(ubicacion) {
+      // Esta es una función simplificada que usa coordenadas aproximadas para algunas regiones de Colombia
+      const regiones = {
+        'cundinamarca': [4.6, -74.08],
+        'antioquia': [6.25, -75.57],
+        'valle del cauca': [3.45, -76.53],
+        'meta': [4.15, -73.63],
+        'córdoba': [8.75, -75.88],
+        'bogotá': [4.71, -74.07],
+        'medellín': [6.25, -75.57],
+        'cali': [3.45, -76.53],
+        'barranquilla': [10.96, -74.80],
+        'cartagena': [10.39, -75.51]
+      };
+      
+      const ubicacionLower = ubicacion.toLowerCase();
+      
+      for (const [region, coords] of Object.entries(regiones)) {
+        if (ubicacionLower.includes(region)) {
+          return coords;
+        }
+      }
+      
+      // Coordenadas por defecto (centro de Colombia)
+      return [4.57, -74.30];
+    }
 
     function limpiarFormulario() {
-  document.getElementById("campania").value = "";
-  document.getElementById("finalizada").checked = false;
-  document.getElementById("vacunados").value = "";
-  document.getElementById("enfermos").value = "";
-  document.getElementById("totalMachos").value = "";
-  document.getElementById("totalHembras").value = "";
-  document.getElementById("totalAnimales").value = "";
-  document.getElementById("fechaHora").value = "";
-  document.getElementById("ubicacion").value = "";
-  document.getElementById("finca").value = "";
-  document.getElementById("observaciones").value = "";
+      document.getElementById("campania").value = "";
+      document.getElementById("finalizada").checked = false;
+      document.getElementById("vacunados").value = "";
+      document.getElementById("enfermos").value = "";
+      document.getElementById("totalMachos").value = "";
+      document.getElementById("totalHembras").value = "";
+      document.getElementById("totalAnimales").value = "";
+      document.getElementById("fechaHora").value = establecerFechaActual();
+      document.getElementById("ubicacion").value = "";
+      document.getElementById("finca").value = "";
+      document.getElementById("observaciones").value = "";
 
-  // Solo deja una enfermedad y una vacuna
-  const enfermedades = document.getElementById("enfermedades");
-  enfermedades.innerHTML = `<select name="enfermedad">
-    <option>Fiebre aftosa</option>
-    <option>Brucelosis</option>
-    <option>Rabia</option>
-    <option>Carbunco</option>
-    <option>Leptospirosis</option>
-  </select>`;
+      // Solo deja una enfermedad y una vacuna
+      const enfermedades = document.getElementById("enfermedades");
+      enfermedades.innerHTML = `<select name="enfermedad">
+        <option>Fiebre aftosa</option>
+        <option>Brucelosis</option>
+        <option>Rabia</option>
+        <option>Carbunco</option>
+        <option>Leptospirosis</option>
+      </select>`;
 
-  const vacunas = document.getElementById("vacunas");
-  vacunas.innerHTML = `<select name="vacuna">
-    <option>Vacuna Aftosa</option>
-    <option>Vacuna Brucela</option>
-    <option>Vacuna Rabia</option>
-    <option>Vacuna Carbunco</option>
-    <option>Vacuna Lepto</option>
-  </select>`;
-}
+      const vacunas = document.getElementById("vacunas");
+      vacunas.innerHTML = `<select name="vacuna">
+        <option>Aftosa Bivalente</option>
+        <option>Vacuna Brucela</option>
+        <option>Vacuna Rabia</option>
+        <option>Vacuna Carbunco</option>
+        <option>Triple Bovina</option>
+      </select>`;
+    }
 
+    // Función para intentar sincronizar registros pendientes
+    function sincronizarRegistrosPendientes() {
+      let registros = JSON.parse(localStorage.getItem('registrosVacunacion')) || [];
+      const pendientes = registros.filter(r => !r.sincronizado);
+      
+      if (pendientes.length > 0) {
+        mostrarEstado(`Sincronizando ${pendientes.length} registros pendientes...`, 'warning');
+        
+        let sincronizados = 0;
+        
+        pendientes.forEach((registro, index) => {
+          setTimeout(() => {
+            enviarDatosAPI(registro);
+            sincronizados++;
+            
+            if (sincronizados === pendientes.length) {
+              mostrarEstado(`Se han sincronizado ${sincronizados} registros pendientes.`, 'success', 5000);
+            }
+          }, index * 2000); // Enviar cada 2 segundos para no sobrecargar el servidor
+        });
+      }
+    }
 
+    // Intentar sincronizar registros pendientes al cargar
+    window.addEventListener('online', sincronizarRegistrosPendientes);
   </script>
 </body>
 </html>
