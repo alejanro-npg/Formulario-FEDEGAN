@@ -207,30 +207,125 @@
 
 
     function guardarFormulario() {
-      const data = {
-        vacunador: document.getElementById('vacunador').value,
-        campania: document.getElementById('campania').value,
-        finalizada: document.getElementById('finalizada').checked,
-        vacunados: parseInt(document.getElementById('vacunados').value) || 0,
-        enfermos: parseInt(document.getElementById('enfermos').value) || 0,
-        total_machos: parseInt(document.getElementById('totalMachos').value) || 0,
-        total_hembras: parseInt(document.getElementById('totalHembras').value) || 0,
-        total_animales: parseInt(document.getElementById('totalAnimales').value) || 0,
-        enfermedades: Array.from(document.getElementsByName('enfermedad')).map(e => e.value),
-        vacunas: Array.from(document.getElementsByName('vacuna')).map(e => e.value),
-        fechaHora: document.getElementById('fechaHora').value,
-        ubicacion: document.getElementById('ubicacion').value,
-        finca: document.getElementById('finca').value,
-        observaciones: document.getElementById('observaciones').value
-      };
+  // Validar datos antes de enviar
+  if (!document.getElementById('campania').value) {
+    alert("Por favor ingrese el nombre de la campaña");
+    return;
+  }
 
-      let registros = JSON.parse(localStorage.getItem('registrosVacunacion')) || [];
-      registros.push(data);
-      localStorage.setItem('registrosVacunacion', JSON.stringify(registros));
+  if (!document.getElementById('fechaHora').value) {
+    alert("Por favor ingrese la fecha y hora");
+    return;
+  }
 
-      alert("Formulario guardado correctamente.");
-      limpiarFormulario();
+  if (!document.getElementById('ubicacion').value) {
+    alert("Por favor ingrese la ubicación");
+    return;
+  }
+
+  if (!document.getElementById('finca').value) {
+    alert("Por favor ingrese el nombre de la finca");
+    return;
+  }
+
+  // Preparar los datos en el formato que espera la API
+  const totalMachos = parseInt(document.getElementById('totalMachos').value) || 0;
+  const totalHembras = parseInt(document.getElementById('totalHembras').value) || 0;
+  
+  const data = {
+    vaccinatorName: document.getElementById('vacunador').value,
+    campaign: document.getElementById('campania').value,
+    campaignStatus: document.getElementById('finalizada').checked ? 'Finalizada' : 'En progreso',
+    animalsVaccinated: parseInt(document.getElementById('vacunados').value) || 0,
+    sickAnimals: parseInt(document.getElementById('enfermos').value) || 0,
+    maleCount: totalMachos,
+    femaleCount: totalHembras,
+    totalAnimals: totalMachos + totalHembras,
+    diseases: Array.from(document.getElementsByName('enfermedad')).map(e => e.value),
+    vaccineType: Array.from(document.getElementsByName('vacuna')).map(e => e.value).join(', '),
+    dateCreated: document.getElementById('fechaHora').value,
+    coordinates: [0, 0], // Estos valores deberían obtenerse del mapa o geocodificación
+    region: getRegionFromLocation(document.getElementById('ubicacion').value),
+    municipality: getMunicipalityFromLocation(document.getElementById('ubicacion').value),
+    farm: document.getElementById('finca').value,
+    observations: document.getElementById('observaciones').value,
+    // Campos adicionales para coincidir con la estructura de datos de React
+    vaccinatorId: getCurrentUserId(),
+    youngCount: Math.floor(totalMachos * 0.3) + Math.floor(totalHembras * 0.3), // Estimación
+    adultCount: Math.ceil(totalMachos * 0.7) + Math.ceil(totalHembras * 0.7)    // Estimación
+  };
+
+  // Guardar también en localStorage como respaldo
+  let registros = JSON.parse(localStorage.getItem('registrosVacunacion')) || [];
+  registros.push(data);
+  localStorage.setItem('registrosVacunacion', JSON.stringify(registros));
+
+  // Enviar datos a la API
+  enviarDatosAPI(data);
+}
+
+// Función para enviar los datos a la API
+function enviarDatosAPI(data) {
+  // Muestra un indicador de carga
+  const btnGuardar = document.querySelector('button[onclick="guardarFormulario()"]');
+  const textoOriginal = btnGuardar.textContent;
+  btnGuardar.textContent = "Enviando...";
+  btnGuardar.disabled = true;
+
+  // URL de la API de la aplicación React
+  const apiUrl = 'http://santiagosantafe.me/proyectoFedegan/api/vaccinations';
+  
+  fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      // Si la API requiere autenticación, añade aquí el token
+      // 'Authorization': 'Bearer ' + localStorage.getItem('token')
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Error en la respuesta del servidor');
     }
+    return response.json();
+  })
+  .then(responseData => {
+    console.log('Respuesta del servidor:', responseData);
+    alert("Formulario enviado correctamente a la aplicación.");
+    limpiarFormulario();
+  })
+  .catch(error => {
+    console.error('Error al enviar datos:', error);
+    alert("No se pudo enviar el formulario a la aplicación. Los datos se han guardado localmente.");
+  })
+  .finally(() => {
+    // Restaurar el botón
+    btnGuardar.textContent = textoOriginal;
+    btnGuardar.disabled = false;
+  });
+}
+
+// Función auxiliar para extraer la región de la ubicación
+function getRegionFromLocation(location) {
+  // Aquí podrías implementar lógica más compleja para extraer la región
+  // Por ahora, simplemente dividimos por coma y tomamos la primera parte
+  const parts = location.split(',');
+  return parts.length > 0 ? parts[0].trim() : location;
+}
+
+// Función auxiliar para extraer el municipio de la ubicación
+function getMunicipalityFromLocation(location) {
+  // Dividimos por coma y tomamos la segunda parte si existe
+  const parts = location.split(',');
+  return parts.length > 1 ? parts[1].trim() : '';
+}
+
+// Función para obtener el ID del usuario actual
+function getCurrentUserId() {
+  const usuario = JSON.parse(localStorage.getItem('usuarioActual')) || {};
+  return usuario.id || 'user_' + Math.floor(Math.random() * 1000);
+}
 
     function limpiarFormulario() {
   document.getElementById("campania").value = "";
